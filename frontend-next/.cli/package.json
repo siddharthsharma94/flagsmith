@@ -1,0 +1,53 @@
+{
+  "name": "ssg",
+  "description": "Makes work easier",
+  "version": "0.0.0",
+  "author": "kyle @kyle-ssg",
+  "bin": {
+    "ssg": "./bin/run"
+  },
+  "dependencies": {
+    "@oclif/command": "^1",
+    "@oclif/config": "^1",
+    "@oclif/plugin-help": "^2",
+    "cli-ux": "^5.4.2",
+    "json-ts": "^1.6.4",
+    "lodash": "^4.17.15"
+  },
+  "devDependencies": {
+    "@manifoldco/swagger-to-ts": "^2.1.0",
+    "@oclif/dev-cli": "^1",
+    "eslint": "^5.13",
+    "eslint-config-oclif": "^3.1",
+    "globby": "^10"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "files": [
+    "/.bin",
+    "/npm-shrinkwrap.json",
+    "/oclif.manifest.json",
+    "/mobile/src"
+  ],
+  "keywords": [
+    "oclif"
+  ],
+  "license": "MIT",
+  "main": "src/index.js",
+  "oclif": {
+    "commands": "./src/commands",
+    "bin": "ssg",
+    "plugins": [
+      "@oclif/plugin-help"
+    ]
+  },
+  "repository": "kyle-ssg/ssg",
+  "scripts": {
+    "postpack": "rm -f oclif.manifest.json",
+    "posttest": "eslint .",
+    "prepack": "oclif-dev manifest && oclif-dev readme",
+    "test": "echo NO TESTS",
+    "version": "oclif-dev readme && git add README.md"
+  }
+}

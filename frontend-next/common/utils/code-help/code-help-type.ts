@@ -1,0 +1,1 @@
+export type codeHelpType = { USER_FEATURE_NAME:string, USER_FEATURE_FUNCTION:string,NPM_RN_CLIENT:string, USER_ID:string, NPM_NODE_CLIENT:string, LIB_NAME: string, LIB_NAME_JAVA:string, FEATURE_NAME: string, FEATURE_FUNCTION: string, FEATURE_NAME_ALT: string, FEATURE_NAME_ALT_VALUE: string, NPM_CLIENT: string }

@@ -1,0 +1,34 @@
+{
+  "extends": "@tsconfig/next/tsconfig.json", // https://github.com/tsconfig/bases/blob/main/bases/next.json
+  "compilerOptions": {
+    "strict": true,
+    "baseUrl": ".",
+    "lib": [
+      "dom"
+    ],
+    "skipLibCheck": true,
+    "paths": {
+      "components/*": [
+        "components/*"
+      ],
+      "common/": [
+        "./common/*"
+      ],
+      "project/": [
+        "./project/*"
+      ],
+      "lodash": [
+        "node_modules/lodash-es"
+      ]
+    }
+  },
+  "exclude": [
+    "node_modules",
+    "mobile"
+  ],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "parser": "./mobile/node_modules/@typescript-eslint/parser",
+  "parserOptions": {
+    "parser": "typescript-eslint",
+    "ecmaVersion": 7,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true,
+      "modules": true
+    }
+  }
+}

@@ -1,0 +1,8 @@
+. "$(dirname "$0")/_/husky.sh"
+export CI_COMMIT_REF_NAME="$(git rev-parse --abbrev-ref HEAD)"
+cd ./mobile && npm run set_native_version && cd ..
+npx eslint mobile/package.json --fix --quiet || exit 0
+git add ./mobile/package.json
+git add ./mobile/ios/Info.plist
+git add ./mobile/android/app/build.gradle
+git commit -m "Version Bump from pre-push" && echo "\n\n###PRE-PUSH ERROR: Version missmatch found for mobile release branch, these files have been adjusted in git for you, please push again if this is expected.\n\n###" && exit 1 || echo "No changes"

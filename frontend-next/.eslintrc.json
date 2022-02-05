@@ -1,0 +1,88 @@
+{
+    "env": {
+        "es6": true,
+        "browser": true
+    },
+    "extends": [
+        "eslint:recommended",
+        "plugin:react/recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:prettier/recommended"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "ecmaVersion": 6,
+        "sourceType": "module",
+        "ecmaFeatures": {
+            "legacyDecorators": true,
+            "modules": true
+        }
+    },
+    "plugins": [
+        "react",
+        "react-hooks",
+        "@typescript-eslint"
+    ],
+    "rules": {
+        "@typescript-eslint/ban-types": "off",
+        "@typescript-eslint/ban-ts-comment": "off",
+        "@typescript-eslint/no-empty-function": "off",
+        "@typescript-eslint/no-explicit-any": "off",
+        "default-case": "error",
+        "dot-notation": "error",
+        "guard-for-in": "error",
+        "no-caller": "error",
+        "no-empty": "off",
+        "no-empty-pattern": "off",
+        "no-var": "error",
+        "prefer-template": "error",
+        "react-hooks/exhaustive-deps": "error",
+        "react-hooks/rules-of-hooks": "error",
+        "react/display-name": "off",
+        "react/jsx-no-undef": [
+            "error",
+            {
+                "allowGlobals": true
+            }
+        ],
+        "react/jsx-uses-react": "off",
+        "react/prop-types": "off",
+        "react/react-in-jsx-scope": "off",
+        "object-curly-spacing": [
+            "error",
+            "always"
+        ]
+    },
+    "ignorePatterns": [
+        "server/index.js",
+        "next.config.js",
+        "babel.config.js"
+    ],
+    "settings": {
+        "react": {
+            "version": "detect"
+        }
+    },
+    "globals": {
+        "DeviceHeight": true,
+        "DeviceWidth": true,
+        "Dimensions": true,
+        "Platform": true,
+        "ReactNative": true,
+        "SafeAreaView": true,
+        "ScrollView": true,
+        "Text": true,
+        "module": true,
+        "TextInput": true,
+        "TouchableOpacity": true,
+        "View": true,
+        "expect": true,
+        "it": true,
+        "global": true,
+        "require": true,
+        "beforeAll": true,
+        "describe": true
+    }
+}
+
+

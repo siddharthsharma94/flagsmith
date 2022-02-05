@@ -1,0 +1,68 @@
+diff --git a/node_modules/typescript/lib/lib.dom.d.ts b/node_modules/typescript/lib/lib.dom.d.ts
+index fdcbb9f..4d99d3a 100644
+--- a/node_modules/typescript/lib/lib.dom.d.ts
++++ b/node_modules/typescript/lib/lib.dom.d.ts
+@@ -14403,20 +14403,7 @@ interface StyleMedia {
+ }
+ 
+ /** A single style sheet. CSS style sheets will further implement the more specialized CSSStyleSheet interface. */
+-interface StyleSheet {
+-    disabled: boolean;
+-    readonly href: string | null;
+-    readonly media: MediaList;
+-    readonly ownerNode: Element | ProcessingInstruction | null;
+-    readonly parentStyleSheet: CSSStyleSheet | null;
+-    readonly title: string | null;
+-    readonly type: string;
+-}
+ 
+-declare var StyleSheet: {
+-    prototype: StyleSheet;
+-    new(): StyleSheet;
+-};
+ 
+ /** A list of StyleSheet. */
+ interface StyleSheetList {
+@@ -14466,25 +14453,6 @@ declare var SubtleCrypto: {
+     prototype: SubtleCrypto;
+     new(): SubtleCrypto;
+ };
+-
+-/** The textual content of Element or Attr. If an element has no markup within its content, it has a single child implementing Text that contains the element's text. However, if the element contains markup, it is parsed into information items and Text nodes that form its children. */
+-interface Text extends CharacterData, Slottable {
+-    readonly assignedSlot: HTMLSlotElement | null;
+-    /**
+-     * Returns the combined data of all direct Text node siblings.
+-     */
+-    readonly wholeText: string;
+-    /**
+-     * Splits data at the given offset and returns the remainder as Text node.
+-     */
+-    splitText(offset: number): Text;
+-}
+-
+-declare var Text: {
+-    prototype: Text;
+-    new(data?: string): Text;
+-};
+-
+ /** A decoder for a specific method, that is a specific character encoding, like utf-8, iso-8859-2, koi8, cp1261, gbk, etc. A decoder takes a stream of bytes as input and emits a stream of code points. For a more scalable, non-native library, see StringView – a C-like representation of strings based on typed arrays. */
+ interface TextDecoder extends TextDecoderCommon {
+     /**
+@@ -18261,16 +18229,6 @@ interface SVGElementTagNameMap {
+ 
+ /** @deprecated Directly use HTMLElementTagNameMap or SVGElementTagNameMap as appropriate, instead. */
+ type ElementTagNameMap = HTMLElementTagNameMap & Pick<SVGElementTagNameMap, Exclude<keyof SVGElementTagNameMap, keyof HTMLElementTagNameMap>>;
+-
+-declare var Audio: {
+-    new(src?: string): HTMLAudioElement;
+-};
+-declare var Image: {
+-    new(width?: number, height?: number): HTMLImageElement;
+-};
+-declare var Option: {
+-    new(text?: string, value?: string, defaultSelected?: boolean, selected?: boolean): HTMLOptionElement;
+-};
+ /** @deprecated This is a legacy alias of `navigator`. */
+ declare var clientInformation: Navigator;
+ /**
