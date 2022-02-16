@@ -89,6 +89,7 @@ class Feature(CustomLifecycleModelMixin, models.Model):
                 identity=None,
                 feature_segment=None,
                 enabled=self.default_enabled,
+                status="COMMITTED",
             )
 
     def validate_unique(self, *args, **kwargs):
@@ -231,22 +232,31 @@ class FeatureState(LifecycleModel, models.Model):
     enabled = models.BooleanField(default=False)
     history = HistoricalRecords()
 
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    version = models.IntegerField(default=1)
+    status = models.CharField(
+        choices=(("DRAFT", "Draft"), ("COMMITTED", "Committed")),
+        max_length=50,
+        default="DRAFT",
+    )
+
     class Meta:
         # Note: this is manually overridden in the migrations for Oracle DBs to include
         # all 4 unique fields in each of these constraints. See migration 0025.
         constraints = [
             UniqueConstraint(
-                fields=["environment", "feature", "feature_segment"],
+                fields=["environment", "feature", "feature_segment", "version"],
                 condition=Q(identity__isnull=True),
                 name="unique_for_feature_segment",
             ),
             UniqueConstraint(
-                fields=["environment", "feature", "identity"],
+                fields=["environment", "feature", "identity", "version"],
                 condition=Q(feature_segment__isnull=True),
                 name="unique_for_identity",
             ),
             UniqueConstraint(
-                fields=["environment", "feature"],
+                fields=["environment", "feature", "version"],
                 condition=Q(identity__isnull=True, feature_segment__isnull=True),
                 name="unique_for_environment",
             ),
@@ -366,7 +376,7 @@ class FeatureState(LifecycleModel, models.Model):
     def check_for_existing_env_feature_state(self):
         # prevent duplicate feature states being created for an environment
         if FeatureState.objects.filter(
-            environment=self.environment, feature=self.feature
+            environment=self.environment, feature=self.feature, version=self.version
         ).exists() and not (self.identity or self.feature_segment):
             raise ValidationError(
                 "Feature state already exists for this environment and feature"
