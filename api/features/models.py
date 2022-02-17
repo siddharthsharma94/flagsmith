@@ -242,8 +242,6 @@ class FeatureState(LifecycleModel, models.Model):
     )
 
     class Meta:
-        # Note: this is manually overridden in the migrations for Oracle DBs to include
-        # all 4 unique fields in each of these constraints. See migration 0025.
         constraints = [
             UniqueConstraint(
                 fields=["environment", "feature", "feature_segment", "version"],
