@@ -91,7 +91,10 @@ class Identity(models.Model):
                 identity_flags[flag.feature_id] = flag
             else:
                 current_flag = identity_flags[flag.feature_id]
-                if flag > current_flag or flag.version > current_flag.version:
+                if flag > current_flag or (
+                    flag.type == current_flag.type
+                    and flag.version > current_flag.version
+                ):
                     identity_flags[flag.feature_id] = flag
 
         if self.environment.project.hide_disabled_flags:

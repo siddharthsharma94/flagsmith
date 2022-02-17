@@ -372,6 +372,15 @@ class FeatureState(LifecycleModel, models.Model):
         except ObjectDoesNotExist:
             return None
 
+    @property
+    def type(self):
+        if self.identity_id:
+            return "IDENTITY"
+        elif self.feature_segment_id:
+            return "FEATURE_SEGMENT"
+        else:
+            return "ENVIRONMENT"
+
     @hook(BEFORE_CREATE)
     def check_for_existing_env_feature_state(self):
         # prevent duplicate feature states being created for an environment
