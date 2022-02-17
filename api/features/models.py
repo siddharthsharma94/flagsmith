@@ -238,7 +238,7 @@ class FeatureState(LifecycleModel, models.Model):
     status = models.CharField(
         choices=(("DRAFT", "Draft"), ("COMMITTED", "Committed")),
         max_length=50,
-        default="DRAFT",
+        default="COMMITTED",
     )
 
     class Meta:
