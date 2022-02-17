@@ -1,9 +1,7 @@
-import os
 import typing
 
-from django.conf import settings
 from django.db import models
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 
 from environments.dynamodb import DynamoIdentityWrapper
 from environments.identities.traits.models import Trait
@@ -44,23 +42,37 @@ class Identity(models.Model):
         """
         segments = self.get_segments(traits=traits)
 
-        with open(
-            os.path.join(
-                settings.BASE_DIR,
-                "environments/identities/sql/get_identity_feature_states.sql",
-            ),
-            "r",
-        ) as f:
-            all_flags = FeatureState.objects.raw(
-                f.read(),
-                {
-                    "environment_id": self.environment_id,
-                    "identity_id": self.id,
-                    "segment_ids": tuple(s.id for s in segments)
-                    if segments
-                    else (None,),
-                },
-            ).prefetch_related(
+        # define sub queries
+        belongs_to_environment_query = Q(environment=self.environment)
+        overridden_for_identity_query = Q(identity=self)
+        overridden_for_segment_query = Q(
+            feature_segment__segment__in=segments,
+            feature_segment__environment=self.environment,
+        )
+        environment_default_query = Q(identity=None, feature_segment=None)
+
+        # define the full query
+        full_query = (
+            Q(status="COMMITTED")
+            & belongs_to_environment_query
+            & (
+                overridden_for_identity_query
+                | overridden_for_segment_query
+                | environment_default_query
+            )
+        )
+
+        select_related_args = [
+            "feature",
+            "feature_state_value",
+            "feature_segment",
+            "feature_segment__segment",
+            "identity",
+        ]
+
+        all_flags = (
+            FeatureState.objects.select_related(*select_related_args)
+            .prefetch_related(
                 Prefetch(
                     "multivariate_feature_state_values",
                     queryset=MultivariateFeatureStateValue.objects.select_related(
@@ -68,6 +80,8 @@ class Identity(models.Model):
                     ),
                 )
             )
+            .filter(full_query)
+        )
 
         # iterate over all the flags and build a dictionary keyed on feature with the highest priority flag
         # for the given identity as the value.
@@ -76,7 +90,8 @@ class Identity(models.Model):
             if flag.feature_id not in identity_flags:
                 identity_flags[flag.feature_id] = flag
             else:
-                if flag > identity_flags[flag.feature_id]:
+                current_flag = identity_flags[flag.feature_id]
+                if flag > current_flag or flag.version > current_flag.version:
                     identity_flags[flag.feature_id] = flag
 
         if self.environment.project.hide_disabled_flags:
