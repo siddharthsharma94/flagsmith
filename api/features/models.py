@@ -468,6 +468,44 @@ class FeatureState(LifecycleModel, models.Model):
             s = f"Identity {self.identity.identifier} - {s}"
         return s
 
+    @classmethod
+    def get_environment_flags(
+        cls, environment: "Environment", feature_name: str = None
+    ) -> typing.List["FeatureState"]:
+        """
+        Get a list of the latest committed versions of FeatureState objects that are
+        associated with the given environment only (i.e. not identity or segment).
+        """
+
+        # Get all committed feature states for a given environment. Note: includes
+        # all versions for a given environment / feature combination. We filter for the
+        # latest version later on.
+        feature_states = cls.objects.filter(
+            environment=environment,
+            identity=None,
+            feature_segment=None,
+            status="COMMITTED",
+        ).exclude(
+            feature__project__hide_disabled_flags=True,
+            enabled=False,
+        )
+
+        if feature_name:
+            feature_states = feature_states.filter(feature__name__iexact=feature_name)
+
+        # Build up a dictionary in the form {feature: feature_state} and only keep the
+        # latest version for each feature.
+        feature_states_dict = {}
+        for feature_state in feature_states:
+            current_feature_state = feature_states_dict.get(feature_state.feature)
+            if (
+                not current_feature_state
+                or feature_state.version > current_feature_state.version
+            ):
+                feature_states_dict[feature_state.feature] = feature_state
+
+        return list(feature_states_dict.values())
+
 
 class FeatureStateValue(AbstractBaseFeatureValueModel):
     feature_state = models.OneToOneField(

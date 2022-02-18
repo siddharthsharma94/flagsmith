@@ -404,52 +404,34 @@ class SDKFeatureStates(GenericAPIView):
         if identifier:
             return self._get_flags_response_with_identifier(request, identifier)
 
-        filter_args = {
-            "identity": None,
-            "environment": request.environment,
-            "feature_segment": None,
-        }
-
         if "feature" in request.GET:
-            filter_args["feature__name__iexact"] = request.GET["feature"]
-            try:
-                feature_state = FeatureState.objects.get(**filter_args)
-            except FeatureState.DoesNotExist:
+            feature_states = FeatureState.get_environment_flags(
+                environment=request.environment, feature_name=request.GET["feature"]
+            )
+            if len(feature_states) != 1:
+                # TODO: what if more than one?
                 return Response(
                     {"detail": "Given feature not found"},
                     status=status.HTTP_404_NOT_FOUND,
                 )
 
-            return Response(self.get_serializer(feature_state).data)
+            return Response(self.get_serializer(feature_states[0]).data)
 
         if settings.CACHE_FLAGS_SECONDS > 0:
-            data = self._get_flags_from_cache(filter_args, request.environment)
+            data = self._get_flags_from_cache(request.environment)
         else:
             data = self.get_serializer(
-                # ignore disabled Flags when project hide_disabled_flags is enabled
-                FeatureState.objects.filter(**filter_args)
-                .exclude(
-                    feature__project__hide_disabled_flags=True,
-                    enabled=False,
-                )
-                .select_related("feature", "feature_state_value"),
+                FeatureState.get_environment_flags(environment=request.environment),
                 many=True,
             ).data
 
         return Response(data)
 
-    def _get_flags_from_cache(self, filter_args, environment):
+    def _get_flags_from_cache(self, environment):
         data = flags_cache.get(environment.api_key)
         if not data:
             data = self.get_serializer(
-                # ignore disabled Flags when project hide_disabled_flags is enabled
-                FeatureState.objects.filter(**filter_args)
-                .exclude(
-                    feature__project__hide_disabled_flags=True,
-                    enabled=False,
-                )
-                .select_related("feature", "feature_state_value"),
-                many=True,
+                FeatureState.get_environment_flags(environment=environment), many=True
             ).data
             flags_cache.set(environment.api_key, data, settings.CACHE_FLAGS_SECONDS)
 

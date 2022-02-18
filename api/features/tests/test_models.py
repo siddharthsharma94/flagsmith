@@ -351,6 +351,45 @@ class FeatureStateTest(TestCase):
         # Then
         mock_trigger_webhooks.assert_called_with(feature_state)
 
+    def test_get_environment_flags_returns_latest_committed_versions_of_feature_states(
+        self,
+    ):
+        # Given
+        feature_1 = Feature.objects.create(name="feature_1", project=self.project)
+        feature_2 = Feature.objects.create(name="feature_2", project=self.project)
+
+        feature_2_v1_feature_state = FeatureState.objects.get(feature=feature_2)
+
+        feature_1_v2_feature_state = FeatureState.objects.create(
+            feature=feature_1, enabled=True, version=2, environment=self.environment
+        )
+        FeatureState.objects.create(
+            feature=feature_1,
+            enabled=False,
+            version=3,
+            status="DRAFT",
+            environment=self.environment,
+        )
+
+        identity = Identity.objects.create(
+            identifier="identity", environment=self.environment
+        )
+        FeatureState.objects.create(
+            feature=feature_1, identity=identity, environment=self.environment
+        )
+
+        # When
+        environment_feature_states = FeatureState.get_environment_flags(
+            environment=self.environment
+        )
+
+        # Then
+        assert set(environment_feature_states) == {
+            feature_1_v2_feature_state,
+            feature_2_v1_feature_state,
+            FeatureState.objects.get(feature=self.feature),
+        }
+
 
 @pytest.mark.parametrize("hashed_percentage", (0.0, 0.3, 0.5, 0.8, 0.999999))
 @mock.patch("features.models.get_hashed_percentage_for_object_ids")
