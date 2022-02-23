@@ -2,6 +2,7 @@ import logging
 
 import coreapi
 from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
+from core.serializers import EmptySerializer
 from django.conf import settings
 from django.core.cache import caches
 from django.utils.decorators import method_decorator
@@ -15,6 +16,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.schemas import AutoSchema
 
+from api.serializers import ErrorSerializer
 from audit.models import (
     IDENTITY_FEATURE_STATE_DELETED_MESSAGE,
     AuditLog,
@@ -350,6 +352,25 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
 
 class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet):
     permission_classes = [IsAuthenticated, EnvironmentFeatureStatePermissions]
+
+    def get_serializer_class(self):
+        if self.action == "create_new_version":
+            return FeatureStateSerializerBasic
+        return super().get_serializer_class()
+
+    @swagger_auto_schema(
+        method="POST",
+        request_body=EmptySerializer(),
+        responses={201: FeatureStateSerializerBasic(), 400: ErrorSerializer()},
+    )
+    @action(detail=True, methods=["POST"], url_path="create-new-version")
+    def create_new_version(self, *args, **kwargs) -> Response:
+        current_version = self.get_object()
+        new_version = current_version.create_new_version()
+        return Response(
+            self.get_serializer(instance=new_version).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):

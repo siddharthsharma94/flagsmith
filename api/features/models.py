@@ -27,6 +27,7 @@ from features.constants import (
     IDENTITY,
 )
 from features.custom_lifecycle import CustomLifecycleModelMixin
+from features.exceptions import FeatureStateVersionAlreadyExists
 from features.feature_states.models import AbstractBaseFeatureValueModel
 from features.feature_types import MULTIVARIATE
 from features.helpers import get_correctly_typed_value
@@ -301,9 +302,11 @@ class FeatureState(LifecycleModel, models.Model):
         # it has a feature_segment or an identity
         return not (other.feature_segment or other.identity)
 
-    def clone(self, env: "Environment") -> "FeatureState":
-        # Clonning the Identity is not allowed because they are closely tied
-        # to the enviroment
+    def clone(
+        self, env: "Environment", version: int = None, status: str = COMMITTED
+    ) -> "FeatureState":
+        # Cloning the Identity is not allowed because they are closely tied
+        # to the environment
         assert self.identity is None
         clone = deepcopy(self)
         clone.id = None
@@ -317,6 +320,8 @@ class FeatureState(LifecycleModel, models.Model):
             else None
         )
         clone.environment = env
+        clone.version = version or self.version
+        clone.status = status
         clone.save()
         # clone the related objects
         self.feature_state_value.clone(clone)
@@ -518,6 +523,21 @@ class FeatureState(LifecycleModel, models.Model):
                 feature_states_dict[feature_state.feature] = feature_state
 
         return list(feature_states_dict.values())
+
+    def create_new_version(self, status: str = DRAFT):
+        """
+        Create a new version of this feature state by incrementing the version
+        number by 1.
+        """
+
+        new_version_number = self.version + 1
+
+        if FeatureState.objects.filter(version=new_version_number).exists():
+            raise FeatureStateVersionAlreadyExists(version=new_version_number)
+
+        return self.clone(
+            env=self.environment, version=new_version_number, status=status
+        )
 
 
 class FeatureStateValue(AbstractBaseFeatureValueModel):

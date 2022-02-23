@@ -7,6 +7,7 @@ from django.test import TestCase
 
 from environments.identities.models import Identity
 from environments.models import Environment
+from features.exceptions import FeatureStateVersionAlreadyExists
 from features.models import Feature, FeatureSegment, FeatureState
 from organisations.models import Organisation
 from projects.models import Project
@@ -355,6 +356,7 @@ class FeatureStateTest(TestCase):
         self,
     ):
         # Given
+        # TODO: tidy up this test to use more attributes from the class
         feature_1 = Feature.objects.create(name="feature_1", project=self.project)
         feature_2 = Feature.objects.create(name="feature_2", project=self.project)
 
@@ -389,6 +391,54 @@ class FeatureStateTest(TestCase):
             feature_2_v1_feature_state,
             FeatureState.objects.get(feature=self.feature),
         }
+
+    def test_create_new_version_creates_new_version_if_does_not_exist_already(self):
+        # Given
+        current_version = FeatureState.objects.get(
+            feature=self.feature, environment=self.environment
+        )
+
+        # When
+        new_version = current_version.create_new_version()
+
+        # Then
+        assert new_version.version == current_version.version + 1
+        assert current_version.feature_state_value != new_version.feature_state_value
+        assert (
+            FeatureState.objects.filter(
+                feature=self.feature,
+                environment=self.environment,
+                feature_segment=None,
+                identity=None,
+            ).count()
+            == 2
+        )
+
+    def test_create_new_version_raises_exception_if_version_already_exists(self):
+        # Given
+        current_version = FeatureState.objects.get(
+            feature=self.feature, environment=self.environment
+        )
+        new_version = current_version.create_new_version()
+
+        # When
+        with pytest.raises(FeatureStateVersionAlreadyExists) as e:
+            current_version.create_new_version()
+
+        # Then
+        assert (
+            FeatureState.objects.filter(
+                feature=self.feature,
+                environment=self.environment,
+                feature_segment=None,
+                identity=None,
+            ).count()
+            == 2
+        )
+        assert (
+            e.value.detail
+            == f"Version {new_version.version} already exists for FeatureState."
+        )
 
 
 @pytest.mark.parametrize("hashed_percentage", (0.0, 0.3, 0.5, 0.8, 0.999999))

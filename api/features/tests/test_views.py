@@ -864,6 +864,27 @@ class FeatureStateViewSetTestCase(TestCase):
         # and
         assert res.json()["results"][0]["identity"]["identifier"] == identifier
 
+    def test_create_new_version(self):
+        # Given
+        feature_state = FeatureState.objects.get(
+            environment=self.environment, feature=self.feature
+        )
+
+        url = reverse(
+            "api-v1:environments:environment-featurestates-create-new-version",
+            args=[self.environment.api_key, feature_state.id],
+        )
+
+        # When
+        response = self.client.post(url)
+
+        # Then
+        assert response.status_code == status.HTTP_201_CREATED
+
+        response_json = response.json()
+        assert response_json["id"] != feature_state.id
+        assert response_json["version"] == feature_state.version + 1
+
 
 @pytest.mark.django_db
 class SDKFeatureStatesTestCase(APITestCase):
