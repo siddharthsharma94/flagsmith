@@ -1,4 +1,5 @@
 from environments.identities.models import Identity
+from features.constants import COMMITTED, DRAFT
 from features.models import Feature, FeatureState
 
 
@@ -19,7 +20,7 @@ def test_identity_get_all_feature_states_gets_latest_committed_version(environme
     feature_state_v2 = FeatureState.objects.create(
         feature=feature,
         version=2,
-        status="COMMITTED",
+        status=COMMITTED,
         enabled=True,
         environment=environment,
     )
@@ -30,7 +31,7 @@ def test_identity_get_all_feature_states_gets_latest_committed_version(environme
     feature_state_v3 = FeatureState.objects.create(
         feature=feature,
         version=3,
-        status="DRAFT",
+        status=DRAFT,
         enabled=False,
         environment=environment,
     )

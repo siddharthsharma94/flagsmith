@@ -19,6 +19,13 @@ from simple_history.models import HistoricalRecords
 from environments.identities.helpers import (
     get_hashed_percentage_for_object_ids,
 )
+from features.constants import (
+    COMMITTED,
+    DRAFT,
+    ENVIRONMENT,
+    FEATURE_SEGMENT,
+    IDENTITY,
+)
 from features.custom_lifecycle import CustomLifecycleModelMixin
 from features.feature_states.models import AbstractBaseFeatureValueModel
 from features.feature_types import MULTIVARIATE
@@ -89,7 +96,6 @@ class Feature(CustomLifecycleModelMixin, models.Model):
                 identity=None,
                 feature_segment=None,
                 enabled=self.default_enabled,
-                status="COMMITTED",
             )
 
     def validate_unique(self, *args, **kwargs):
@@ -236,9 +242,9 @@ class FeatureState(LifecycleModel, models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     version = models.IntegerField(default=1)
     status = models.CharField(
-        choices=(("DRAFT", "Draft"), ("COMMITTED", "Committed")),
+        choices=((DRAFT, "Draft"), (COMMITTED, "Committed")),
         max_length=50,
-        default="COMMITTED",
+        default=COMMITTED,
     )
 
     class Meta:
@@ -371,13 +377,20 @@ class FeatureState(LifecycleModel, models.Model):
             return None
 
     @property
-    def type(self):
-        if self.identity_id:
-            return "IDENTITY"
-        elif self.feature_segment_id:
-            return "FEATURE_SEGMENT"
-        else:
-            return "ENVIRONMENT"
+    def type(self) -> str:
+        # TODO: tests
+        if self.identity_id and self.feature_segment_id is None:
+            return IDENTITY
+        elif self.feature_segment_id and self.identity_id is None:
+            return FEATURE_SEGMENT
+        elif self.identity_id and self.feature_segment_id is None:
+            return ENVIRONMENT
+
+        logger.error(
+            "FeatureState %d does not have a valid type. Defaulting to environment.",
+            self.id,
+        )
+        return ENVIRONMENT
 
     @hook(BEFORE_CREATE)
     def check_for_existing_env_feature_state(self):
@@ -484,7 +497,7 @@ class FeatureState(LifecycleModel, models.Model):
             environment=environment,
             identity=None,
             feature_segment=None,
-            status="COMMITTED",
+            status=COMMITTED,
         ).exclude(
             feature__project__hide_disabled_flags=True,
             enabled=False,

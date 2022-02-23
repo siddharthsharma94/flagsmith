@@ -423,7 +423,6 @@ class SDKIdentitiesTestCase(APITestCase):
             feature_segment=feature_segment,
             environment=self.environment,
             enabled=True,
-            status="COMMITTED",
         )
 
         # When
@@ -526,7 +525,6 @@ class SDKIdentitiesTestCase(APITestCase):
             feature=self.feature_1,
             environment=self.environment,
             enabled=True,
-            status="COMMITTED",
         )
 
         # When

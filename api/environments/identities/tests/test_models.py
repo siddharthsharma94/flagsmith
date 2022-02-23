@@ -80,19 +80,16 @@ class IdentityTestCase(TransactionTestCase):
             feature=feature,
             environment=self.environment,
             identity=identity_1,
-            status="COMMITTED",
         )
         FeatureState.objects.create(
             feature=feature,
             environment=self.environment,
             identity=identity_2,
-            status="COMMITTED",
         )
         FeatureState.objects.create(
             feature=feature,
             environment=environment_2,
             identity=identity_3,
-            status="COMMITTED",
         )
 
         # For identity_1 all items in a different environment should not appear. Identity
@@ -141,14 +138,12 @@ class IdentityTestCase(TransactionTestCase):
             environment=environment,
             enabled=True,
             identity=identity,
-            status="COMMITTED",
         )
         disabled_flag = FeatureState.objects.create(
             feature=feature_2,
             environment=environment,
             enabled=False,
             identity=identity,
-            status="COMMITTED",
         )
 
         # When
@@ -283,7 +278,6 @@ class IdentityTestCase(TransactionTestCase):
             feature_segment=remote_config_feature_segment,
             feature=remote_config,
             environment=self.environment,
-            status="COMMITTED",
         )
         FeatureStateValue.objects.filter(feature_state=feature_state).update(
             string_value=overridden_value
@@ -398,7 +392,6 @@ class IdentityTestCase(TransactionTestCase):
             feature=remote_config,
             feature_segment=feature_segment,
             environment=self.environment,
-            status="COMMITTED",
         )
         FeatureStateValue.objects.filter(feature_state=segment_feature_state).update(
             integer_value=overridden_value, type=INTEGER
@@ -513,7 +506,6 @@ class IdentityTestCase(TransactionTestCase):
             feature=remote_config,
             feature_segment=feature_segment_1,
             environment=self.environment,
-            status="COMMITTED",
         )
         FeatureStateValue.objects.filter(feature_state=segment_feature_state_1).update(
             string_value=overridden_value_1, type=STRING
@@ -585,7 +577,6 @@ class IdentityTestCase(TransactionTestCase):
             feature=remote_config,
             feature_segment=feature_segment,
             environment=self.environment,
-            status="COMMITTED",
         )
         FeatureStateValue.objects.filter(feature_state=segment_feature_state).update(
             string_value=overridden_value_1, type=STRING
