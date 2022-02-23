@@ -249,6 +249,10 @@ class FeatureState(LifecycleModel, models.Model):
     )
 
     class Meta:
+        # Note: these constraints are applied manually using SQL so that we can split
+        # out postgres and other database technologies (and hence we can apply the
+        # indexes concurrently to Postgres databases). See migrations features.0036 and
+        # feature.0038 for further information.
         constraints = [
             UniqueConstraint(
                 fields=["environment", "feature", "feature_segment", "version"],

@@ -13,40 +13,58 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        PostgresOnlyRunSQL(
-            'DROP INDEX CONCURRENTLY "unique_for_environment";',
-            reverse_sql="""CREATE UNIQUE INDEX CONCURRENTLY "unique_for_environment" 
-                ON "features_featurestate" ("environment_id", "feature_id") 
-                WHERE ("feature_segment_id" IS NULL AND "identity_id" IS NULL);""",
-        ),
-        PostgresOnlyRunSQL(
-            'DROP INDEX CONCURRENTLY "unique_for_feature_segment";',
-            reverse_sql="""CREATE UNIQUE INDEX CONCURRENTLY "unique_for_feature_segment" 
-                ON "features_featurestate" ("environment_id", "feature_id", "feature_segment_id") 
-                WHERE "identity_id" IS NULL;""",
-        ),
-        PostgresOnlyRunSQL(
-            'DROP INDEX CONCURRENTLY "unique_for_identity";',
-            reverse_sql="""CREATE UNIQUE INDEX CONCURRENTLY "unique_for_identity" 
-                ON "features_featurestate" ("environment_id", "feature_id", "identity_id") 
-                WHERE "feature_segment_id" IS NULL;""",
-        ),
-        NonPostgresDBOnlyRunSQL(
-            'DROP INDEX "unique_for_environment"',
-            reverse_sql="""CREATE UNIQUE INDEX "unique_for_environment" 
+        migrations.SeparateDatabaseAndState(
+            state_operations=[
+                migrations.RemoveConstraint(
+                    model_name='featurestate',
+                    name='unique_for_feature_segment',
+                ),
+                migrations.RemoveConstraint(
+                    model_name='featurestate',
+                    name='unique_for_identity',
+                ),
+                migrations.RemoveConstraint(
+                    model_name='featurestate',
+                    name='unique_for_environment',
+                ),
+            ],
+            database_operations=[
+                PostgresOnlyRunSQL(
+                    'DROP INDEX CONCURRENTLY "unique_for_environment";',
+                    reverse_sql="""CREATE UNIQUE INDEX CONCURRENTLY "unique_for_environment" 
                     ON "features_featurestate" ("environment_id", "feature_id") 
                     WHERE ("feature_segment_id" IS NULL AND "identity_id" IS NULL);""",
-        ),
-        NonPostgresDBOnlyRunSQL(
-            'DROP INDEX "unique_for_feature_segment"',
-            reverse_sql="""CREATE UNIQUE INDEX "unique_for_feature_segment" 
-                ON "features_featurestate" ("environment_id", "feature_id", "feature_segment_id") 
-                WHERE "identity_id" IS NULL;""",
-        ),
-        NonPostgresDBOnlyRunSQL(
-            'DROP INDEX "unique_for_identity"',
-            reverse_sql="""CREATE UNIQUE INDEX "unique_for_identity" 
-                ON "features_featurestate" ("environment_id", "feature_id", "identity_id") 
-                WHERE "feature_segment_id" IS NULL;""",
+                ),
+                PostgresOnlyRunSQL(
+                    'DROP INDEX CONCURRENTLY "unique_for_feature_segment";',
+                    reverse_sql="""CREATE UNIQUE INDEX CONCURRENTLY "unique_for_feature_segment" 
+                    ON "features_featurestate" ("environment_id", "feature_id", "feature_segment_id") 
+                    WHERE "identity_id" IS NULL;""",
+                ),
+                PostgresOnlyRunSQL(
+                    'DROP INDEX CONCURRENTLY "unique_for_identity";',
+                    reverse_sql="""CREATE UNIQUE INDEX CONCURRENTLY "unique_for_identity" 
+                    ON "features_featurestate" ("environment_id", "feature_id", "identity_id") 
+                    WHERE "feature_segment_id" IS NULL;""",
+                ),
+                NonPostgresDBOnlyRunSQL(
+                    'DROP INDEX "unique_for_environment"',
+                    reverse_sql="""CREATE UNIQUE INDEX "unique_for_environment" 
+                        ON "features_featurestate" ("environment_id", "feature_id") 
+                        WHERE ("feature_segment_id" IS NULL AND "identity_id" IS NULL);""",
+                ),
+                NonPostgresDBOnlyRunSQL(
+                    'DROP INDEX "unique_for_feature_segment"',
+                    reverse_sql="""CREATE UNIQUE INDEX "unique_for_feature_segment" 
+                    ON "features_featurestate" ("environment_id", "feature_id", "feature_segment_id") 
+                    WHERE "identity_id" IS NULL;""",
+                ),
+                NonPostgresDBOnlyRunSQL(
+                    'DROP INDEX "unique_for_identity"',
+                    reverse_sql="""CREATE UNIQUE INDEX "unique_for_identity" 
+                    ON "features_featurestate" ("environment_id", "feature_id", "identity_id") 
+                    WHERE "feature_segment_id" IS NULL;""",
+                ),
+            ]
         ),
     ]
