@@ -477,7 +477,6 @@ class SDKIdentitiesTestCase(APITestCase):
             feature=self.feature_1,
             environment=self.environment,
             enabled=True,
-            status="COMMITTED",
         )
 
         # When

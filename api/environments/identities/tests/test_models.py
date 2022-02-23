@@ -267,7 +267,6 @@ class IdentityTestCase(TransactionTestCase):
             feature_segment=feature_flag_feature_segment,
             environment=self.environment,
             enabled=True,
-            status="COMMITTED",
         )
 
         overridden_value = "overridden-value"
@@ -442,7 +441,6 @@ class IdentityTestCase(TransactionTestCase):
             feature=remote_config,
             feature_segment=feature_segment,
             environment=self.environment,
-            status="COMMITTED",
         )
         FeatureStateValue.objects.filter(feature_state=feature_state).update(
             boolean_value=overridden_value, type=BOOLEAN
@@ -522,7 +520,6 @@ class IdentityTestCase(TransactionTestCase):
             feature=remote_config,
             feature_segment=feature_segment_2,
             environment=self.environment,
-            status="COMMITTED",
         )
         FeatureStateValue.objects.filter(feature_state=segment_feature_state_2).update(
             string_value=overridden_value_2, type=STRING
@@ -642,7 +639,6 @@ class IdentityTestCase(TransactionTestCase):
             feature_segment=feature_segment,
             environment=self.environment,
             enabled=enabled_for_segment,
-            status="COMMITTED",
         )
 
         # When - we get all feature states for an identity
