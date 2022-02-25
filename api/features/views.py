@@ -5,6 +5,7 @@ from app_analytics.influxdb_wrapper import get_multiple_event_list_for_feature
 from core.serializers import EmptySerializer
 from django.conf import settings
 from django.core.cache import caches
+from django.db.models import Max, Q, QuerySet
 from django.utils.decorators import method_decorator
 from drf_yasg2 import openapi
 from drf_yasg2.utils import swagger_auto_schema
@@ -30,6 +31,7 @@ from environments.permissions.permissions import (
     NestedEnvironmentPermissions,
 )
 
+from .constants import COMMITTED
 from .models import Feature, FeatureState
 from .permissions import (
     EnvironmentFeatureStatePermissions,
@@ -172,28 +174,38 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
         Override queryset to filter based on provided URL parameters.
         """
         environment_api_key = self.kwargs["environment_api_key"]
-        identity_pk = self.kwargs.get("identity_pk")
         environment = get_object_or_404(
             self.request.user.get_permitted_environments(["VIEW_ENVIRONMENT"]),
             api_key=environment_api_key,
         )
 
-        queryset = FeatureState.objects.filter(
-            environment=environment, feature_segment=None
+        latest_versions_qs = (
+            FeatureState.objects.filter(environment=environment, status=COMMITTED)
+            .values("feature", "feature_segment", "identity")
+            .annotate(max_version=Max("version"))
+            .order_by()
         )
+        q = Q()
+        for latest_version_dict in latest_versions_qs:
+            q = q | Q(
+                feature_id=latest_version_dict["feature"],
+                identity_id=latest_version_dict["identity"],
+                feature_segment_id=latest_version_dict["feature_segment"],
+                version=latest_version_dict["max_version"],
+            )
 
-        if identity_pk:
-            queryset = queryset.filter(identity__pk=identity_pk)
-        elif "anyIdentity" in self.request.query_params:
+        queryset = FeatureState.objects.filter(q)
+        queryset = self._apply_query_param_filters(queryset)
+
+        return queryset
+
+    def _apply_query_param_filters(self, queryset: QuerySet) -> QuerySet:
+        if "anyIdentity" in self.request.query_params:
             queryset = queryset.exclude(identity=None)
-        else:
-            queryset = queryset.filter(identity=None, feature_segment=None)
-
         if self.request.query_params.get("feature"):
             queryset = queryset.filter(
                 feature__id=int(self.request.query_params.get("feature"))
             )
-
         return queryset
 
     def get_environment_from_request(self):
@@ -353,6 +365,9 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
 class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet):
     permission_classes = [IsAuthenticated, EnvironmentFeatureStatePermissions]
 
+    def get_queryset(self):
+        return super().get_queryset().filter(identity=None, feature_segment=None)
+
     def get_serializer_class(self):
         if self.action == "create_new_version":
             return FeatureStateSerializerBasic
@@ -375,6 +390,9 @@ class EnvironmentFeatureStateViewSet(BaseFeatureStateViewSet):
 
 class IdentityFeatureStateViewSet(BaseFeatureStateViewSet):
     permission_classes = [IsAuthenticated, IdentityFeatureStatePermissions]
+
+    def get_queryset(self):
+        return super().get_queryset().filter(identity__pk=self.kwargs["identity_pk"])
 
 
 class SimpleFeatureStateViewSet(

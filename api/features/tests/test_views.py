@@ -17,6 +17,7 @@ from audit.models import (
 )
 from environments.identities.models import Identity
 from environments.models import Environment
+from features.constants import COMMITTED
 from features.models import (
     Feature,
     FeatureSegment,
@@ -884,6 +885,28 @@ class FeatureStateViewSetTestCase(TestCase):
         response_json = response.json()
         assert response_json["id"] != feature_state.id
         assert response_json["version"] == feature_state.version + 1
+
+    def test_get_feature_states_only_returns_latest_versions(self):
+        # Given
+        feature_state = FeatureState.objects.get(
+            environment=self.environment, feature=self.feature
+        )
+        feature_state_v2 = feature_state.create_new_version(status=COMMITTED)
+
+        url = reverse(
+            "api-v1:environments:environment-featurestates-list",
+            args=[self.environment.api_key],
+        )
+
+        # When
+        response = self.client.get(url)
+
+        # Then
+        assert response.status_code == status.HTTP_200_OK
+
+        response_json = response.json()
+        assert len(response_json["results"]) == 1
+        assert response_json["results"][0]["id"] == feature_state_v2.id
 
 
 @pytest.mark.django_db
