@@ -27,7 +27,10 @@ from features.constants import (
     IDENTITY,
 )
 from features.custom_lifecycle import CustomLifecycleModelMixin
-from features.exceptions import FeatureStateVersionAlreadyExists
+from features.exceptions import (
+    FeatureStateVersionAlreadyExistsError,
+    FeatureStateVersionError,
+)
 from features.feature_states.models import AbstractBaseFeatureValueModel
 from features.feature_types import MULTIVARIATE
 from features.helpers import get_correctly_typed_value
@@ -537,7 +540,11 @@ class FeatureState(LifecycleModel, models.Model):
         new_version_number = self.version + 1
 
         if FeatureState.objects.filter(version=new_version_number).exists():
-            raise FeatureStateVersionAlreadyExists(version=new_version_number)
+            raise FeatureStateVersionAlreadyExistsError(version=new_version_number)
+        elif self.status != COMMITTED:
+            raise FeatureStateVersionError(
+                "Cannot create new version of a non-committed flag."
+            )
 
         return self.clone(
             env=self.environment, version=new_version_number, status=status

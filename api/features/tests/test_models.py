@@ -8,7 +8,7 @@ from django.test import TestCase
 from environments.identities.models import Identity
 from environments.models import Environment
 from features.constants import ENVIRONMENT, FEATURE_SEGMENT, IDENTITY
-from features.exceptions import FeatureStateVersionAlreadyExists
+from features.exceptions import FeatureStateVersionAlreadyExistsError
 from features.models import Feature, FeatureSegment, FeatureState
 from organisations.models import Organisation
 from projects.models import Project
@@ -423,7 +423,7 @@ class FeatureStateTest(TestCase):
         new_version = current_version.create_new_version()
 
         # When
-        with pytest.raises(FeatureStateVersionAlreadyExists) as e:
+        with pytest.raises(FeatureStateVersionAlreadyExistsError) as e:
             current_version.create_new_version()
 
         # Then
