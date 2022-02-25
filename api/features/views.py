@@ -185,7 +185,7 @@ class BaseFeatureStateViewSet(viewsets.ModelViewSet):
             .annotate(max_version=Max("version"))
             .order_by()
         )
-        q = Q()
+        q = Q(environment=environment)
         for latest_version_dict in latest_versions_qs:
             q = q | Q(
                 feature_id=latest_version_dict["feature"],
